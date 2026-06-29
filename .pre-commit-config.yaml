@@ -10,11 +10,9 @@ repos:
       - id: terraform_tflint
         args:
           - --args=--recursive
+          - --args=--minimum-failure-severity=error
+      # Uses the shared .terraform-docs.yml config (output file/mode defined there).
       - id: terraform_docs
-        args:
-          - --hook-config=--path-to-file=README.md
-          - --hook-config=--add-to-existing-file=true
-          - --hook-config=--create-file-if-not-exist=true
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

@@ -127,72 +127,83 @@ work is tracked in [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md), notably:
 
 | Name | Version |
 |------|---------|
-| terraform | >= 1.0 |
-| aws | >= 3.0, < 4.0 |
-| null | >= 2.0 |
-| random | >= 2.0 |
-| template | >= 2.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.0, < 4.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 2.0 |
+| <a name="requirement_template"></a> [template](#requirement\_template) | >= 2.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| aws | >= 3.0, < 4.0 |
+No providers.
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_hana_host"></a> [hana\_host](#module\_hana\_host) | ./modules/aws-sap-hana-host | n/a |
+| <a name="module_sap_app_host"></a> [sap\_app\_host](#module\_sap\_app\_host) | ./modules/aws-sap-app-host | n/a |
+| <a name="module_sap_ascs_host"></a> [sap\_ascs\_host](#module\_sap\_ascs\_host) | ./modules/aws-sap-ascs-host | n/a |
+| <a name="module_sap_efs"></a> [sap\_efs](#module\_sap\_efs) | ./modules/aws-sap-netweaver-efs | n/a |
+
+## Resources
+
+No resources.
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| aws_region | AWS Region to execute deployment to | `string` | n/a | yes |
-| application_code | Unique application code for resource naming | `string` | n/a | yes |
-| application_name | Name of the application (e.g. `ecc`, `s4hana`) | `string` | n/a | yes |
-| environment_type | Environment type (`dev`, `test`, `prod`) | `string` | n/a | yes |
-| vpc_id | VPC to deploy infrastructure to | `string` | n/a | yes |
-| subnet_ids | List of subnets for instance distribution | `list(string)` | n/a | yes |
-| ami_id | AMI id for the underlying OS | `string` | n/a | yes |
-| sid | System ID for the SAP NetWeaver system | `string` | n/a | yes |
-| hana_instance_type | SAP-certified instance type for HANA | `string` | n/a | yes |
-| enabled | Enable provisioning of the module's resources | `bool` | `true` | no |
-| dns_zone_name | Route53 private DNS zone name (empty = no records) | `string` | `""` | no |
-| customer_default_sg_id | Preexisting security groups to attach | `list(string)` | `[]` | no |
-| customer_cidr_blocks | CIDR blocks to allow end-user connectivity from | `list(string)` | `[]` | no |
-| ssh_key | EC2 key pair name (empty = use SSM Session Manager) | `string` | `""` | no |
-| user_data | User-data script (empty = default bootstrap) | `string` | `""` | no |
-| kms_key_arn | KMS key ARN for EBS/EFS encryption (recommended) | `string` | `""` | no |
-| default_instance_role | Create the default instance role | `bool` | `true` | no |
-| iam_instance_role | IAM role name to attach to the instance profile | `string` | `""` | no |
-| enable_ha | Provision a second HANA and ASCS instance | `bool` | `false` | no |
-| high_availability | Deprecated; superseded by `enable_ha` | `bool` | `false` | no |
-| hana_is_scale_out | Use EFS-backed shared disk for scale-out | `bool` | `false` | no |
-| hana_scale_out_node_count | Nodes for the scale-out scenario | `number` | `3` | no |
-| root_volume_size | Root volume size (GB) | `number` | `50` | no |
-| hana_disks_data_storage_type | EBS type for HANA data volumes (`gp2`/`io1`) | `string` | `"gp2"` | no |
-| hana_disks_logs_storage_type | EBS type for HANA log volumes (`gp2`/`io1`) | `string` | `"gp2"` | no |
-| hana_disks_backup_storage_type | EBS type for HANA backup volumes | `string` | `"st1"` | no |
-| hana_disks_shared_storage_type | EBS type for HANA shared volumes | `string` | `"gp2"` | no |
-| hana_disks_shared_size | Size (GB) for HANA shared volumes | `string` | `"512"` | no |
-| hana_disks_usr_sap_storage_type | EBS type for `/usr/sap` volumes | `string` | `"gp2"` | no |
-| hana_disks_usr_sap_storage_size | Size (GB) for `/usr/sap` volumes | `number` | `50` | no |
-| ascs_instance_type | Instance type for SAP central services | `string` | `"m5.xlarge"` | no |
-| as_instance_type | Instance type for application servers | `string` | `"m5.xlarge"` | no |
-| as_instance_count | Number of application servers | `number` | `1` | no |
-| efs_sapmnt | Provision EFS for `/sapmnt` | `bool` | `true` | no |
-| efs_name | Name for the `/sapmnt` EFS file system | `string` | `"dir_sapmnt"` | no |
-| sapmnt_volume_size | `/sapmnt` size (GB) for the non-EFS scenario (0 = none) | `number` | `0` | no |
-| ascs_root_volume_size | Root volume size (GB) for ASCS | `number` | `50` | no |
-| app_server_root_volume_size | Root volume size (GB) for app servers | `number` | `50` | no |
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | (Required) The AMI id for the underlying OS | `string` | n/a | yes |
+| <a name="input_app_server_root_volume_size"></a> [app\_server\_root\_volume\_size](#input\_app\_server\_root\_volume\_size) | (Optional) Size in GBs for the root volumes of the instances | `number` | `50` | no |
+| <a name="input_application_code"></a> [application\_code](#input\_application\_code) | (Required) The unique application code for resource naming | `string` | n/a | yes |
+| <a name="input_application_name"></a> [application\_name](#input\_application\_name) | (Required) The name of the application being provisioned, ex. 'datamart', 'ecc', 's4hana', etc. | `string` | n/a | yes |
+| <a name="input_as_instance_count"></a> [as\_instance\_count](#input\_as\_instance\_count) | Number of application server instances to be provisioned | `number` | `1` | no |
+| <a name="input_as_instance_type"></a> [as\_instance\_type](#input\_as\_instance\_type) | The instance type for SAP Application Servers | `string` | `"m5.xlarge"` | no |
+| <a name="input_ascs_instance_type"></a> [ascs\_instance\_type](#input\_ascs\_instance\_type) | The instance type for SAP Central Services | `string` | `"m5.xlarge"` | no |
+| <a name="input_ascs_root_volume_size"></a> [ascs\_root\_volume\_size](#input\_ascs\_root\_volume\_size) | (Optional) Size in GBs for the root volumes of the instances | `number` | `50` | no |
+| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | (Required) AWS Region to execute deployment to | `string` | n/a | yes |
+| <a name="input_customer_cidr_blocks"></a> [customer\_cidr\_blocks](#input\_customer\_cidr\_blocks) | (Optional) The CIDR blocks to allow end-user connectivity from | `list(string)` | `[]` | no |
+| <a name="input_customer_default_sg_id"></a> [customer\_default\_sg\_id](#input\_customer\_default\_sg\_id) | (Optional) List of preexisting security groups to be attached to the instance. The required security groups are created automatically, this is just for mandatory default ones | `list(string)` | `[]` | no |
+| <a name="input_default_instance_role"></a> [default\_instance\_role](#input\_default\_instance\_role) | (Optional) Flag to define whether default instance role should be created | `bool` | `true` | no |
+| <a name="input_dns_zone_name"></a> [dns\_zone\_name](#input\_dns\_zone\_name) | (Optional) The name of the Route53 private DNS zone. If left empty no DNS records will be created | `string` | `""` | no |
+| <a name="input_efs_name"></a> [efs\_name](#input\_efs\_name) | (Optional) Name used for the EFS file system that backs /sapmnt | `string` | `"dir_sapmnt"` | no |
+| <a name="input_efs_sapmnt"></a> [efs\_sapmnt](#input\_efs\_sapmnt) | (Optional) Flag to define whether EFS File Systems should be provisioned for /sapmnt | `bool` | `true` | no |
+| <a name="input_enable_ha"></a> [enable\_ha](#input\_enable\_ha) | (Optional) Defines how many instances should be deployed | `bool` | `false` | no |
+| <a name="input_enabled"></a> [enabled](#input\_enabled) | (Optional) Enable the provisioning of resources of the module or not | `bool` | `true` | no |
+| <a name="input_environment_type"></a> [environment\_type](#input\_environment\_type) | (Required) Environment type of SAP Netweaver system, e.x. 'dev', 'test', 'prod' | `string` | n/a | yes |
+| <a name="input_hana_disks_backup_storage_type"></a> [hana\_disks\_backup\_storage\_type](#input\_hana\_disks\_backup\_storage\_type) | (Optional) EBS Volume type for hana backup volumes. | `string` | `"st1"` | no |
+| <a name="input_hana_disks_data_storage_type"></a> [hana\_disks\_data\_storage\_type](#input\_hana\_disks\_data\_storage\_type) | (Optional) EBS Volume type for hana data volumes. Can be gp2 or io1 | `string` | `"gp2"` | no |
+| <a name="input_hana_disks_logs_storage_type"></a> [hana\_disks\_logs\_storage\_type](#input\_hana\_disks\_logs\_storage\_type) | (Optional) EBS Volume type for hana log volumes. Can be gp2 or io1 | `string` | `"gp2"` | no |
+| <a name="input_hana_disks_shared_size"></a> [hana\_disks\_shared\_size](#input\_hana\_disks\_shared\_size) | (Optional) Size in GBs for the hana shared volumes of the instances | `string` | `"512"` | no |
+| <a name="input_hana_disks_shared_storage_type"></a> [hana\_disks\_shared\_storage\_type](#input\_hana\_disks\_shared\_storage\_type) | (Optional) EBS Volume type for hana shared volumes. | `string` | `"gp2"` | no |
+| <a name="input_hana_disks_usr_sap_storage_size"></a> [hana\_disks\_usr\_sap\_storage\_size](#input\_hana\_disks\_usr\_sap\_storage\_size) | (Optional) Size in GBs for the /usr/sap volumes of the instances | `number` | `50` | no |
+| <a name="input_hana_disks_usr_sap_storage_type"></a> [hana\_disks\_usr\_sap\_storage\_type](#input\_hana\_disks\_usr\_sap\_storage\_type) | (Optional) EBS Volume type for hana /usr/sap volumes. | `string` | `"gp2"` | no |
+| <a name="input_hana_instance_type"></a> [hana\_instance\_type](#input\_hana\_instance\_type) | (Required) Identifies the instance types to be used for HANA. Should be from the list of certified instances, since the disk sizing is done based on this | `string` | n/a | yes |
+| <a name="input_hana_is_scale_out"></a> [hana\_is\_scale\_out](#input\_hana\_is\_scale\_out) | (Optional) Defines whether Shared disk should be create as an EFS file system | `bool` | `false` | no |
+| <a name="input_hana_scale_out_node_count"></a> [hana\_scale\_out\_node\_count](#input\_hana\_scale\_out\_node\_count) | (Required, if hana\_is\_scale\_out = false) Defines how many nodes required for scale-out scenario | `number` | `3` | no |
+| <a name="input_high_availability"></a> [high\_availability](#input\_high\_availability) | (Deprecated) Retained for backwards compatibility. High availability is controlled by `enable_ha`, which is the variable actually consumed by the module | `bool` | `false` | no |
+| <a name="input_iam_instance_role"></a> [iam\_instance\_role](#input\_iam\_instance\_role) | (Optional) The IAM role name to be attached to instance profile | `string` | `""` | no |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | (Optional) ARN of the KMS key used to encrypt EBS and EFS volumes. If left empty, volumes are created unencrypted. Supplying a key is strongly recommended | `string` | `""` | no |
+| <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Size in GBs for the root volumes of the instances | `number` | `50` | no |
+| <a name="input_sapmnt_volume_size"></a> [sapmnt\_volume\_size](#input\_sapmnt\_volume\_size) | (Optional) Size in GBs for the /sapmnt volume. Use it only for non-EFS scenario. Not provisioned if value = 0 | `number` | `0` | no |
+| <a name="input_sid"></a> [sid](#input\_sid) | (Required) The System id for the SAP Netweaver system | `string` | n/a | yes |
+| <a name="input_ssh_key"></a> [ssh\_key](#input\_ssh\_key) | (Optional) The key pair name for the instances. If not provided - you can use SSM session manager for console access | `string` | `""` | no |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | (Required) List of subnets for instance distribution | `list(string)` | n/a | yes |
+| <a name="input_user_data"></a> [user\_data](#input\_user\_data) | (Optional) The user data script for the instance. If none provisioned - default one will be used to install AWS CLI and SSM agent | `string` | `""` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | (Required) VPC to deploy infrastructure to | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| hana_instance_ids | EC2 instance IDs of the HANA host(s) |
-| hana_private_ips | Private IP addresses of the HANA host(s) |
-| ascs_instance_ids | EC2 instance IDs of the ASCS host(s) |
-| ascs_private_ips | Private IP addresses of the ASCS host(s) |
-| app_instance_ids | EC2 instance IDs of the application server host(s) |
-| app_private_ips | Private IP addresses of the application server host(s) |
-| sapmnt_efs_id | EFS file system ID backing `/sapmnt` |
+| <a name="output_app_instance_ids"></a> [app\_instance\_ids](#output\_app\_instance\_ids) | EC2 instance IDs of the application server host(s) |
+| <a name="output_app_private_ips"></a> [app\_private\_ips](#output\_app\_private\_ips) | Private IP addresses of the application server host(s) |
+| <a name="output_ascs_instance_ids"></a> [ascs\_instance\_ids](#output\_ascs\_instance\_ids) | EC2 instance IDs of the ASCS host(s) |
+| <a name="output_ascs_private_ips"></a> [ascs\_private\_ips](#output\_ascs\_private\_ips) | Private IP addresses of the ASCS host(s) |
+| <a name="output_hana_instance_ids"></a> [hana\_instance\_ids](#output\_hana\_instance\_ids) | EC2 instance IDs of the HANA host(s) |
+| <a name="output_hana_private_ips"></a> [hana\_private\_ips](#output\_hana\_private\_ips) | Private IP addresses of the HANA host(s) |
+| <a name="output_sapmnt_efs_id"></a> [sapmnt\_efs\_id](#output\_sapmnt\_efs\_id) | EFS file system ID backing /sapmnt |
 <!-- END_TF_DOCS -->
 
 ## Contributing
