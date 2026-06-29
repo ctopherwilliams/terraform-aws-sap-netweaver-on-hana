@@ -16,3 +16,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+# HANA database tier
+output "hana_instance_ids" {
+  description = "EC2 instance IDs of the HANA host(s)"
+  value       = module.hana_host.instance_ids
+}
+
+output "hana_private_ips" {
+  description = "Private IP addresses of the HANA host(s)"
+  value       = module.hana_host.server_private_ip
+}
+
+# ASCS tier
+output "ascs_instance_ids" {
+  description = "EC2 instance IDs of the ASCS host(s)"
+  value       = module.sap_ascs_host.instance_ids
+}
+
+output "ascs_private_ips" {
+  description = "Private IP addresses of the ASCS host(s)"
+  value       = module.sap_ascs_host.server_private_ip
+}
+
+# Application server tier
+output "app_instance_ids" {
+  description = "EC2 instance IDs of the application server host(s)"
+  value       = module.sap_app_host.instance_ids
+}
+
+output "app_private_ips" {
+  description = "Private IP addresses of the application server host(s)"
+  value       = module.sap_app_host.server_private_ip
+}
+
+# Shared storage
+output "sapmnt_efs_id" {
+  description = "EFS file system ID backing /sapmnt"
+  value       = module.sap_efs.efs_file_system_id
+}

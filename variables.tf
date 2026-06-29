@@ -19,6 +19,7 @@
 # Generic variables
 variable "aws_region" {
   description = "(Required) AWS Region to execute deployment to"
+  type        = string
 }
 
 variable "enabled" {
@@ -51,12 +52,14 @@ variable "subnet_ids" {
   type        = list(string)
 }
 variable "dns_zone_name" {
-  default = "(Optional) The name of Route53 Private DNS zone. If not provided - DNS record will not be created"
-  type    = string
+  description = "(Optional) The name of the Route53 private DNS zone. If left empty no DNS records will be created"
+  default     = ""
+  type        = string
 }
 variable "customer_default_sg_id" {
   description = "(Optional) List of preexisting security groups to be attached to the instance. The required security groups are created automatically, this is just for mandatory default ones"
   default     = []
+  type        = list(string)
 }
 variable "customer_cidr_blocks" {
   default     = []
@@ -82,8 +85,9 @@ variable "user_data" {
 
 # Security
 variable "kms_key_arn" {
-  default = ""
-  type    = string
+  description = "(Optional) ARN of the KMS key used to encrypt EBS and EFS volumes. If left empty, volumes are created unencrypted. Supplying a key is strongly recommended"
+  default     = ""
+  type        = string
 }
 variable "default_instance_role" {
   description = "(Optional) Flag to define whether default instance role should be created"
@@ -103,7 +107,7 @@ variable "sid" {
 }
 variable "high_availability" {
   default     = false
-  description = "If true provision second instances for HANA and ASCS"
+  description = "(Deprecated) Retained for backwards compatibility. High availability is controlled by `enable_ha`, which is the variable actually consumed by the module"
   type        = bool
 }
 
@@ -191,8 +195,9 @@ variable "efs_sapmnt" {
   type        = bool
 }
 variable "efs_name" {
-  default = "dir_sapmnt"
-  type    = string
+  description = "(Optional) Name used for the EFS file system that backs /sapmnt"
+  default     = "dir_sapmnt"
+  type        = string
 }
 variable "sapmnt_volume_size" {
   default     = 0

@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TERRAFORM_VERSION: "1.9.8"
+  TERRAFORM_DOCS_VERSION: "0.19.0"
+
+jobs:
+  fmt-validate:
+    name: Format & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      - name: Terraform init (no backend)
+        run: terraform init -backend=false -input=false
+
+      - name: Terraform validate
+        run: terraform validate -no-color
+
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: tflint init
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Warnings (e.g. unused declarations) are surfaced but only errors fail the
+      # build. See REHAUL_PLAYBOOK.md for the warning backlog.
+      - name: Run tflint
+        run: tflint --recursive --minimum-failure-severity=error --format compact
+
+  security:
+    name: Trivy config scan (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Trivy IaC scan
+        run: trivy config . --severity HIGH,CRITICAL --exit-code 0 --quiet
+
+  docs:
+    name: terraform-docs check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install terraform-docs
+        run: |
+          curl -sSLo /tmp/td.tar.gz "https://terraform-docs.io/dl/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+          tar -xzf /tmp/td.tar.gz -C /tmp terraform-docs
+          sudo mv /tmp/terraform-docs /usr/local/bin/terraform-docs
+
+      - name: Render docs and check for drift
+        run: |
+          terraform-docs -c .terraform-docs.yml .
+          git diff --exit-code -- README.md

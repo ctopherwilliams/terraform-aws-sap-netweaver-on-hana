@@ -1,0 +1,19 @@
+# Copy this file to terraform.tfvars and replace the placeholder values.
+
+aws_region = "us-east-1"
+
+# Networking
+vpc_id        = "vpc-xxxxxxxx"
+subnet_ids    = ["subnet-aaaaaaaa", "subnet-bbbbbbbb"]
+dns_zone_name = "" # e.g. "sap.internal" — leave empty to skip Route53 records
+
+# Operating system
+ami_id  = "ami-xxxxxxxxxxxxxxxxx" # SAP-certified SLES/RHEL AMI
+ssh_key = ""                      # leave empty to use SSM Session Manager
+
+# Security
+kms_key_arn = "" # arn:aws:kms:us-east-1:111122223333:key/...  (recommended)
+
+# SAP
+sid                = "ECC"
+hana_instance_type = "r5.2xlarge"
