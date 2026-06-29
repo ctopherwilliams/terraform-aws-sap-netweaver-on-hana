@@ -1,96 +1,160 @@
-# terraform-aws-sap-netweaver-on-hana
+<a name="top"></a>
 
-[![CI](https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/actions/workflows/ci.yml/badge.svg)](https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/actions/workflows/ci.yml)
-[![Terraform](https://img.shields.io/badge/terraform-%3E%3D%201.0-7B42BC?logo=terraform)](https://www.terraform.io)
-[![AWS Provider](https://img.shields.io/badge/aws--provider-%3E%3D%205.0-FF9900?logo=amazonaws)](https://registry.terraform.io/providers/hashicorp/aws/latest)
-[![License: MIT-0](https://img.shields.io/badge/license-MIT--0-blue.svg)](./LICENSE)
+<div align="center">
 
-Provision the complete AWS infrastructure for an **SAP NetWeaver on HANA**
-landscape with a single Terraform module — the HANA database tier, the ASCS
-(central services) tier, the application-server tier, and the shared `/sapmnt`
-storage that ties them together. Built for production: secure-by-default,
-cost-aware, composable, and verified on the latest AWS provider in CI.
+<h1>terraform-aws-sap-netweaver-on-hana</h1>
 
-> **What this module does and does not do.** It provisions the *infrastructure*
-> (compute, storage, networking, IAM) that SAP NetWeaver and HANA are installed
-> onto. It does **not** install the SAP software itself — bring a SAP-certified
-> OS AMI and run your installation tooling (e.g. SWPM, Ansible) afterwards.
+<strong>Production-ready Terraform for a complete SAP NetWeaver&nbsp;on&nbsp;HANA landscape on AWS.</strong>
+<br/>
+HANA database · ASCS central services · application servers · shared <code>/sapmnt</code> — in one module.
 
-## Table of contents
+<br/>
+<br/>
 
-- [Highlights](#highlights)
-- [What it creates](#what-it-creates)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Quick start](#quick-start)
-- [Consuming the module](#consuming-the-module)
-- [Configuration recipes](#configuration-recipes)
-- [Sub-modules](#sub-modules)
-- [Development](#development)
-- [Roadmap](#roadmap)
-- [Testing](#testing)
-- [Requirements / Inputs / Outputs](#requirements)
-- [Contributing](#contributing) · [Security](#security) · [License](#license)
+<a href="https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/ci.yml?branch=master&style=for-the-badge&logo=githubactions&logoColor=white&label=CI"></a>
+<a href="https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/ctopherwilliams/terraform-aws-sap-netweaver-on-hana?style=for-the-badge&logo=github&label=release&color=2da44e"></a>
+<img alt="Terraform" src="https://img.shields.io/badge/terraform-%E2%89%A5%201.0-7B42BC?style=for-the-badge&logo=terraform&logoColor=white">
+<img alt="AWS Provider" src="https://img.shields.io/badge/aws--provider-%E2%89%A5%205.0-FF9900?style=for-the-badge&logo=amazonwebservices&logoColor=white">
+<a href="./LICENSE"><img alt="License: MIT-0" src="https://img.shields.io/badge/license-MIT--0-1f6feb?style=for-the-badge"></a>
 
-## Highlights
+<br/>
 
-- **Modern toolchain** — Terraform `>= 1.0`, AWS provider `>= 5.0`; validated on
-  the latest provider in CI, with no deprecated providers or functions.
-- **Secure by default** — every EBS and EFS volume is encrypted, EC2 enforces
-  **IMDSv2**, SSH is optional (SSM Session Manager works out of the box), and a
-  customer-managed KMS key is a one-line opt-in.
-- **Cost-aware** — EBS volumes default to **gp3** (cheaper and faster than gp2).
-- **Composable** — HANA, ASCS, application-server, and `/sapmnt` EFS tiers are
-  independent sub-modules you can adopt individually.
-- **Production patterns built in** — high availability, HANA scale-out, EC2
-  auto-recovery, private Route53 DNS, and consistent tagging.
-- **CI-verified** — every module *and* example is `fmt` / `validate` / `tflint`
-  checked and scanned with Trivy on every push.
+<a href="#-quick-start"><b>Quick start</b></a> ·
+<a href="#-architecture"><b>Architecture</b></a> ·
+<a href="#-configuration-recipes"><b>Recipes</b></a> ·
+<a href="#-inputs--outputs"><b>Reference</b></a> ·
+<a href="#-roadmap"><b>Roadmap</b></a>
 
-## What it creates
+</div>
 
-For each SAP tier, the module can create:
+---
+
+Provision the entire AWS footprint an **SAP NetWeaver on HANA** system runs on — compute, encrypted storage, networking, and IAM — across all four tiers, with one `terraform apply`. Built for production: **secure by default**, **cost-aware**, **composable**, and **verified on the latest AWS provider in CI**.
+
+> [!NOTE]
+> This module provisions the **infrastructure** that SAP NetWeaver and HANA are installed *onto*. It does **not** install the SAP software itself — bring a SAP‑certified OS AMI and run your installation tooling (SWPM, Ansible, …) afterwards.
+
+## ✨ Highlights
+
+| | |
+|---|---|
+| 🧱 **Complete landscape** | HANA, ASCS, application servers, and shared `/sapmnt` EFS — composed from independent, reusable sub-modules. |
+| 🔒 **Secure by default** | Every EBS/EFS volume encrypted, **IMDSv2** enforced, SSM Session Manager out of the box, configurable egress, one-line customer-managed KMS. |
+| 💸 **Cost-aware** | **gp3** EBS defaults (cheaper and faster than gp2); instance-type-driven HANA disk sizing. |
+| 🧰 **Modern toolchain** | Terraform `>= 1.0`, AWS provider `>= 5.0` — no deprecated providers or functions; validated on the *latest* provider in CI. |
+| 🏗️ **Production patterns** | High availability, HANA scale-out, EC2 auto-recovery, private Route53 DNS, consistent tagging. |
+| ✅ **CI-verified** | Every module *and* example is `fmt` / `validate` / `tflint` checked and scanned with Trivy on every push; Terratest harness for apply-time tests. |
+
+## 🏛️ Architecture
+
+What a default **HA** deployment looks like — the module spreads each tier across your subnets/AZs and wires them to shared `/sapmnt` storage and private DNS.
+
+```mermaid
+flowchart TB
+    ops(["👤 SAP Basis / Operators"])
+
+    subgraph region["☁️ AWS Region"]
+        direction TB
+        subgraph vpc["Your VPC · multiple subnets / AZs"]
+            direction TB
+
+            subgraph hana["HANA database tier"]
+                h1[("HANA<br/>primary")]
+                h2[("HANA<br/>standby · HA")]
+            end
+
+            subgraph ascs["Central services tier"]
+                a1["ASCS<br/>primary"]
+                a2["ASCS<br/>standby · HA"]
+            end
+
+            subgraph app["Application server tier"]
+                p1["App server 1"]
+                p2["App server N"]
+            end
+
+            efs[["📁 EFS · /sapmnt<br/>encrypted · shared"]]
+            dns[("Route53<br/>private zone")]
+        end
+    end
+
+    ops -. SSM Session Manager .-> ascs
+    efs --- ascs
+    efs --- app
+    hana -. A record .-> dns
+    ascs -. A record .-> dns
+    app  -. A record .-> dns
+
+    classDef hanaStyle fill:#1f6feb,stroke:#0b3d91,color:#ffffff;
+    classDef ascsStyle fill:#8957e5,stroke:#4b2a86,color:#ffffff;
+    classDef appStyle fill:#2da44e,stroke:#116329,color:#ffffff;
+    classDef sharedStyle fill:#fb8500,stroke:#b35a00,color:#ffffff;
+    class h1,h2 hanaStyle;
+    class a1,a2 ascsStyle;
+    class p1,p2 appStyle;
+    class efs,dns sharedStyle;
+```
+
+<sub>Every instance: <b>IMDSv2</b> · encrypted <b>gp3</b> EBS · SSM-enabled IAM role · optional private Route53 DNS · configurable egress.</sub>
+
+<details>
+<summary><b>How the module is composed</b> (architecture-as-code)</summary>
+
+<br/>
+
+```mermaid
+flowchart LR
+    root["🌐 root module"]
+    root --> hana["aws-sap-hana-host"]
+    root --> ascs["aws-sap-ascs-host"]
+    root --> app["aws-sap-app-host"]
+    root --> efs["aws-sap-netweaver-efs"]
+
+    hana --> ec2["ec2-instance-linux"]
+    ascs --> ec2
+    app  --> ec2
+    hana --> iam["security/iam"]
+    ascs --> iam
+    app  --> iam
+    hana --> dnsrec["compute/dns-records"]
+    ascs --> dnsrec
+    app  --> dnsrec
+    efs  --> efsint["storage/efs"]
+    hana --> tags["common/tagging"]
+    ascs --> tags
+    app  --> tags
+    efs  --> tags
+
+    classDef tier fill:#0d1117,stroke:#1f6feb,color:#ffffff;
+    classDef int fill:#161b22,stroke:#8b949e,color:#c9d1d9;
+    class hana,ascs,app,efs tier;
+    class ec2,iam,dnsrec,efsint,tags int;
+```
+
+</details>
+
+## 📦 What it creates
+
+For each SAP tier the module can create:
 
 - [EC2 instances](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) with [auto-recovery](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) and [IMDSv2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html)
-- [EBS volumes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume), [encrypted](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) and gp3 by default, laid out per the SAP component
+- [EBS volumes](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume) — [encrypted](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) and gp3 by default, laid out per SAP component
 - [Security groups](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) with configurable egress
 - [IAM roles & instance profiles](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) (SSM-enabled by default)
 - An [EFS file system](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_file_system) for `/sapmnt` (encrypted)
 - Optional [Route53 DNS records](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) in a private zone
 - Consistent resource [tagging](./modules/_internal-modules/common/tagging)
 
-## Architecture
-
-```text
-                          ┌──────────────────────────────┐
-                          │   EFS  —  /sapmnt (shared)    │   ← encrypted
-                          └───────────────┬──────────────┘
-                                          │  NFS
-        ┌──────────────────┬──────────────┼──────────────────┐
-        │                  │              │                  │
- ┌──────▼───────┐  ┌───────▼──────┐  ┌────▼───────┐  ┌───────▼──────┐
- │   HANA DB    │  │     ASCS     │  │  App srv 1 │  │  App srv N   │
- │   host(s)    │  │    host(s)   │  │            │  │              │
- │ data/log/bkp │  │  + optional  │  │            │  │              │
- │  EBS (gp3)   │  │     HA pair  │  │            │  │              │
- └──────────────┘  └──────────────┘  └────────────┘  └──────────────┘
-   IMDSv2 · encrypted EBS · SSM-enabled IAM role · private Route53 DNS (optional)
-```
-
-## Prerequisites
+## 📋 Prerequisites
 
 - **Terraform** `>= 1.0` and the **AWS provider** `>= 5.0`.
-- An **AWS account** with permissions to create EC2, EBS, EFS, IAM, Route53, and
-  security-group resources.
-- An existing **VPC and subnets** (the module deploys into them; it does not
-  create networking).
-- A **SAP-certified OS AMI** (SLES for SAP / RHEL for SAP) for the `ami_id` input.
-- A HANA-certified **instance type** (e.g. `r5.*`, `r6i.*`, `x2idn.*`) — disk
-  sizing is derived from it.
-- *(Optional)* a **KMS key** for customer-managed encryption and a **Route53
-  private hosted zone** for DNS records.
+- An **AWS account** with permissions for EC2, EBS, EFS, IAM, Route53, and security groups.
+- An existing **VPC and subnets** — the module deploys into them; it does not create networking.
+- A **SAP-certified OS AMI** (SLES for SAP / RHEL for SAP) for `ami_id`.
+- A HANA-certified **instance type** (e.g. `r5.*`, `r6i.*`, `x2idn.*`) — disk sizing is derived from it.
+- *(Optional)* a **KMS key** for customer-managed encryption and a **Route53 private hosted zone** for DNS.
 
-## Quick start
+## 🚀 Quick start
 
 ```bash
 git clone https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana
@@ -106,13 +170,13 @@ terraform apply
 
 See [`examples/basic`](./examples/basic) for the complete, runnable example.
 
-## Consuming the module
+## 🔌 Consuming the module
 
 Reference it directly from Git and pin a ref:
 
 ```hcl
 module "sap_netweaver_on_hana" {
-  source = "git::https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana.git?ref=master"
+  source = "git::https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana.git?ref=2.0.0"
 
   aws_region       = "us-east-1"
   application_code = "ecc"
@@ -142,48 +206,60 @@ module "sap_netweaver_on_hana" {
 }
 ```
 
-> **Tip:** pin `?ref=` to a tag or commit SHA rather than `master` so upgrades
-> are deliberate.
+> [!TIP]
+> Pin `?ref=` to a tag (e.g. `2.0.0`) or a commit SHA rather than `master`, so upgrades are deliberate.
 
-## Configuration recipes
+## 🎛️ Configuration recipes
 
-**High availability** — provision a second HANA and ASCS instance:
+<details open>
+<summary><b>High availability</b> — second HANA &amp; ASCS instance</summary>
 
 ```hcl
 enable_ha = true
 ```
+</details>
 
-**HANA scale-out** — multiple HANA nodes backed by a shared EFS file system:
+<details>
+<summary><b>HANA scale-out</b> — multiple HANA nodes on a shared EFS file system</summary>
 
 ```hcl
 hana_is_scale_out         = true
 hana_scale_out_node_count = 4
 ```
+</details>
 
-**Customer-managed encryption** — supply a KMS key (volumes are encrypted either
-way; this switches them from the AWS-managed key to yours):
+<details>
+<summary><b>Customer-managed encryption</b> — bring your own KMS key</summary>
+
+Volumes are always encrypted; this switches them from the AWS-managed key to yours.
 
 ```hcl
 kms_key_arn = "arn:aws:kms:us-east-1:111122223333:key/abc..."
 ```
+</details>
 
-**Restrict outbound traffic** — egress defaults to all destinations (SAP hosts
-generally need it for patching, SSM, and SAP downloads). Lock it down for
-private/proxied networks:
+<details>
+<summary><b>Restrict outbound traffic</b> — lock down egress for private networks</summary>
+
+Egress defaults to all destinations (SAP hosts generally need it for patching, SSM, and SAP downloads).
 
 ```hcl
 instance_egress_cidr_blocks = ["10.0.0.0/8"]
 ```
+</details>
 
-**Tune HANA storage** — choose volume types and sizes (data/log accept
-`gp3`, `gp2`, or `io1`):
+<details>
+<summary><b>Tune HANA storage</b> — volume types and sizes</summary>
+
+Data/log volumes accept `gp3`, `gp2`, or `io1`.
 
 ```hcl
 hana_disks_data_storage_type = "io1"
 hana_disks_shared_size       = "1024"
 ```
+</details>
 
-## Sub-modules
+## 🧩 Sub-modules
 
 Each tier is an independent module you can reuse on its own:
 
@@ -194,7 +270,7 @@ Each tier is an independent module you can reuse on its own:
 | [`aws-sap-app-host`](./modules/aws-sap-app-host)           | NetWeaver application server instance(s) |
 | [`aws-sap-netweaver-efs`](./modules/aws-sap-netweaver-efs) | Shared EFS file system for `/sapmnt` |
 
-## Development
+## 🛠️ Development
 
 ```bash
 # format, validate and lint
@@ -208,30 +284,27 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-CI runs `terraform fmt`, `validate` (root, **every sub-module, and every
-example**), `tflint`, a Trivy IaC scan, and a `terraform-docs` drift check on
-every push and pull request (see
-[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
+CI runs `terraform fmt`, `validate` (root, **every sub-module, and every example**), `tflint`, a Trivy IaC scan, and a `terraform-docs` drift check on every push and pull request (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
 
-## Roadmap
+## 🧪 Testing
 
-The major modernization is complete — AWS provider v5/v6 support, removal of the
-deprecated `template` provider, gp3 defaults, encryption-by-default, IMDSv2
-enforcement, configurable egress, and a [Terratest integration harness](./test)
-have all shipped. Remaining enhancements are tracked in
-[`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md):
+- **Static** (every push, no credentials needed): `fmt`, `validate` of every module and example, `tflint`, Trivy, and `terraform-docs` drift.
+- **Integration** (on demand): the [`test/`](./test) Terratest suite applies `examples/basic` against a real AWS account, asserts outputs, and destroys. See [`test/README.md`](./test/README.md).
 
-- Wire a test AWS account into the `integration` workflow for continuous
-  apply-time verification (the harness self-skips until secrets are set).
+## 🗺️ Roadmap
+
+The major modernization is complete — AWS provider v5/v6 support, removal of the deprecated `template` provider, gp3 defaults, encryption-by-default, IMDSv2 enforcement, configurable egress, and a [Terratest integration harness](./test) have all shipped. Remaining enhancements are tracked in [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md):
+
+- Wire a test AWS account into the `integration` workflow for continuous apply-time verification (the harness self-skips until secrets are set).
 - Expose gp3 IOPS / throughput tunables for HANA data and log volumes.
 
-## Testing
+## 📚 Inputs & Outputs
 
-- **Static** (every push, no credentials needed): `fmt`, `validate` of every
-  module and example, `tflint`, Trivy, and `terraform-docs` drift.
-- **Integration** (on demand): the [`test/`](./test) Terratest suite applies
-  `examples/basic` against a real AWS account, asserts outputs, and destroys.
-  See [`test/README.md`](./test/README.md).
+> [!NOTE]
+> The reference below is generated from source by [`terraform-docs`](https://terraform-docs.io) and verified for drift in CI. Expand to view.
+
+<details>
+<summary><b>Requirements, providers, modules, inputs &amp; outputs</b></summary>
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -317,22 +390,22 @@ No resources.
 | <a name="output_sapmnt_efs_id"></a> [sapmnt\_efs\_id](#output\_sapmnt\_efs\_id) | EFS file system ID backing /sapmnt |
 <!-- END_TF_DOCS -->
 
-## Contributing
+</details>
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Please run `pre-commit run --all-files`
-before opening a pull request.
+## 🤝 Contributing
 
-## Security
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Please run `pre-commit run --all-files` before opening a pull request.
 
-See [SECURITY.md](./SECURITY.md) for how to report vulnerabilities.
+## 🛡️ Security
 
-## License
+Volumes are encrypted, IMDSv2 is enforced, and egress is restrictable. To report a vulnerability, see [SECURITY.md](./SECURITY.md).
+
+## 📄 License
 
 Licensed under the MIT-0 License. See [LICENSE](./LICENSE).
 
-## Acknowledgements
+## 🙌 Acknowledgements
 
-This module began as an AWS-authored sample for deploying SAP on AWS and has been
-substantially modernized — AWS provider v5/v6 support, security hardening, gp3
-defaults, CI, and documentation. See [`CHANGELOG.md`](./CHANGELOG.md) for the full
-history.
+This module began as an AWS-authored sample for deploying SAP on AWS and has been substantially modernized — AWS provider v5/v6 support, security hardening, gp3 defaults, CI, and documentation. See [`CHANGELOG.md`](./CHANGELOG.md) for the full history.
+
+<div align="center"><sub><a href="#top">⬆ back to top</a></sub></div>
