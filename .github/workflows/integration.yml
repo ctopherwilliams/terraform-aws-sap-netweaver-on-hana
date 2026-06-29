@@ -1,0 +1,56 @@
+name: Integration tests
+
+# Applies examples/basic against a real AWS account, asserts outputs, and
+# destroys. Runs ON DEMAND only — it provisions real, billable infrastructure.
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "AWS region to deploy the test into"
+        required: false
+        default: "us-east-1"
+
+permissions:
+  id-token: write # for OIDC role assumption
+  contents: read
+
+jobs:
+  terratest:
+    name: Terratest (apply / assert / destroy)
+    runs-on: ubuntu-latest
+    # secrets cannot be referenced directly in `if:`; surface the role ARN as an
+    # env var so the credential step can be gated on its presence.
+    env:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      # Provide AWS credentials via an OIDC role. Set the AWS_ROLE_ARN secret to
+      # enable; the step is skipped (and the tests self-skip) when it is absent.
+      - name: Configure AWS credentials (OIDC)
+        if: ${{ env.AWS_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Run integration tests
+        working-directory: test
+        env:
+          AWS_REGION: ${{ inputs.aws_region }}
+          SAP_TEST_VPC_ID: ${{ secrets.SAP_TEST_VPC_ID }}
+          SAP_TEST_SUBNET_IDS: ${{ secrets.SAP_TEST_SUBNET_IDS }}
+          SAP_TEST_AMI_ID: ${{ secrets.SAP_TEST_AMI_ID }}
+          SAP_TEST_SID: ${{ secrets.SAP_TEST_SID }}
+        run: go test -v -timeout 60m ./...
