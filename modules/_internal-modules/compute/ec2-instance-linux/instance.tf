@@ -28,6 +28,13 @@ resource "aws_instance" "linux-server" {
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile[0].name
   monitoring             = true
 
+  # Enforce IMDSv2 (token-required) to mitigate SSRF-based credential theft.
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
   lifecycle {
     ignore_changes = [user_data, root_block_device, ami]
   }
@@ -41,6 +48,6 @@ resource "aws_instance" "linux-server" {
     volume_size = var.root_volume_size
     volume_type = var.volume_type
     encrypted   = true
-    kms_key_id  = var.kms_key_arn
+    kms_key_id  = var.kms_key_arn != "" ? var.kms_key_arn : null
   }
 }

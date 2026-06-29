@@ -24,16 +24,3 @@ data "aws_route53_zone" "dns_zone" {
 data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
-
-data "template_file" "init" {
-  /*template = "${file("user_data")}"*/
-  template = <<EOF
-#!/bin/bash
-sudo chmod 666 /etc/hosts
-sudo cp /etc/hosts /etc/hosts.tmp
-sudo awk '$1==s{$0=$0 OFS alias}1' s=127.0.0.1 alias=$HOSTNAME /etc/hosts.tmp >/etc/hosts
-sudo rm /etc/hosts.tmp
-sudo chmod 644 /etc/hosts
-sudo passwd --delete aws_install
-EOF
-}

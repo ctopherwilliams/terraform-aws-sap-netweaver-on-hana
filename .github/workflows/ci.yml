@@ -33,8 +33,21 @@ jobs:
       - name: Terraform init (no backend)
         run: terraform init -backend=false -input=false
 
-      - name: Terraform validate
+      - name: Terraform validate (root)
         run: terraform validate -no-color
+
+      # Validate every module and example so no corner of the repo can rot.
+      - name: Terraform validate (all modules & examples)
+        run: |
+          set -euo pipefail
+          dirs=$(find modules examples -name '*.tf' -not -path '*/.terraform/*' \
+                 -exec dirname {} \; | sort -u)
+          for d in $dirs; do
+            echo "::group::validate $d"
+            terraform -chdir="$d" init -backend=false -input=false >/dev/null
+            terraform -chdir="$d" validate -no-color
+            echo "::endgroup::"
+          done
 
   tflint:
     name: tflint

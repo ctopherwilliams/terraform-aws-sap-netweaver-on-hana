@@ -17,10 +17,14 @@
  */
 
 locals {
-  hana_data_size         = var.hana_disks_data_storage_type == "gp2" ? var.hana_disks_data_gp2[var.instance_type].disk_size : (var.hana_disks_data_storage_type == "io1" ? var.hana_disks_data_io1[var.instance_type].disk_size : 0)
-  hana_data_disks_number = var.hana_disks_data_storage_type == "gp2" ? var.hana_disks_data_gp2[var.instance_type].disk_nb : (var.hana_disks_data_gp2 == "io1" ? var.hana_disks_data_gp2[var.instance_type].disk_nb : 0)
-  hana_log_size          = var.hana_disks_logs_storage_type == "gp2" ? var.hana_disks_logs_gp2[var.instance_type].disk_size : (var.hana_disks_logs_storage_type == "io1" ? var.hana_disks_logs_io1[var.instance_type].disk_size : 0)
-  hana_log_disks_number  = var.hana_disks_logs_storage_type == "gp2" ? var.hana_disks_logs_gp2[var.instance_type].disk_nb : (var.hana_disks_logs_storage_type == "io1" ? var.hana_disks_logs_io1[var.instance_type].disk_nb : 0)
+  # io1 uses the provisioned-IOPS sizing profile; every other SSD type
+  # (gp2, gp3) uses the general-purpose SSD profile, which shares the same
+  # capacity layout. Selecting on != "io1" keeps gp2 behavior identical while
+  # adding gp3 support (and fixes a prior bug that compared a map to "io1").
+  hana_data_size         = var.hana_disks_data_storage_type == "io1" ? var.hana_disks_data_io1[var.instance_type].disk_size : var.hana_disks_data_gp2[var.instance_type].disk_size
+  hana_data_disks_number = var.hana_disks_data_storage_type == "io1" ? var.hana_disks_data_io1[var.instance_type].disk_nb : var.hana_disks_data_gp2[var.instance_type].disk_nb
+  hana_log_size          = var.hana_disks_logs_storage_type == "io1" ? var.hana_disks_logs_io1[var.instance_type].disk_size : var.hana_disks_logs_gp2[var.instance_type].disk_size
+  hana_log_disks_number  = var.hana_disks_logs_storage_type == "io1" ? var.hana_disks_logs_io1[var.instance_type].disk_nb : var.hana_disks_logs_gp2[var.instance_type].disk_nb
   data_volume_names      = formatlist("%s", null_resource.data_volume_names_list.*.triggers.data_volume_name)
   log_volume_names       = formatlist("%s", null_resource.log_volume_names_list.*.triggers.log_volume_name)
 }
@@ -46,8 +50,8 @@ resource "aws_ebs_volume" "xvdo_volume" {
   availability_zone = element(module.instance.availability_zone, count.index)
   size              = var.hana_disks_shared_size
   type              = var.hana_disks_shared_storage_type
-  kms_key_id        = var.kms_key_arn
-  encrypted         = var.kms_key_arn != "" ? true : false
+  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
+  encrypted         = true
   lifecycle {
     ignore_changes = [kms_key_id, encrypted]
   }
@@ -69,8 +73,8 @@ resource "aws_ebs_volume" "data_volumes" {
   availability_zone = element(module.instance.availability_zone, floor(count.index / local.hana_data_disks_number))
   size              = local.hana_data_size
   type              = var.hana_disks_data_storage_type
-  encrypted         = var.kms_key_arn != "" ? true : false
-  kms_key_id        = var.kms_key_arn
+  encrypted         = true
+  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
   lifecycle {
     ignore_changes = [kms_key_id, encrypted]
   }
@@ -93,8 +97,8 @@ resource "aws_ebs_volume" "log_volumes" {
   availability_zone = element(module.instance.availability_zone, floor(count.index / local.hana_log_disks_number))
   size              = local.hana_log_size
   type              = var.hana_disks_logs_storage_type
-  encrypted         = var.kms_key_arn != "" ? true : false
-  kms_key_id        = var.kms_key_arn
+  encrypted         = true
+  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
   lifecycle {
     ignore_changes = [kms_key_id, encrypted]
   }
@@ -118,8 +122,8 @@ resource "aws_ebs_volume" "backup_volumes" {
   # Assumption that locally we will retain 1 backup on the local EBS Volume
   size       = local.hana_data_size * 2 * local.hana_data_disks_number
   type       = var.hana_disks_backup_storage_type
-  kms_key_id = var.kms_key_arn
-  encrypted  = var.kms_key_arn != "" ? true : false
+  kms_key_id = var.kms_key_arn != "" ? var.kms_key_arn : null
+  encrypted  = true
   lifecycle {
     ignore_changes = [kms_key_id, encrypted]
   }
@@ -141,8 +145,8 @@ resource "aws_ebs_volume" "usr_sap_volumes" {
   availability_zone = element(module.instance.availability_zone, count.index)
   size              = var.hana_disks_usr_sap_storage_size
   type              = var.hana_disks_usr_sap_storage_type
-  kms_key_id        = var.kms_key_arn
-  encrypted         = var.kms_key_arn != "" ? true : false
+  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
+  encrypted         = true
   lifecycle {
     ignore_changes = [kms_key_id, encrypted]
   }
@@ -163,9 +167,9 @@ resource "aws_volume_attachment" "ebs_attach_xvdq" {
 resource "aws_ebs_volume" "xvdr_volume" {
   availability_zone = element(module.instance.availability_zone, count.index)
   size              = 50
-  type              = "gp2"
-  kms_key_id        = var.kms_key_arn
-  encrypted         = var.kms_key_arn != "" ? true : false
+  type              = "gp3"
+  kms_key_id        = var.kms_key_arn != "" ? var.kms_key_arn : null
+  encrypted         = true
   lifecycle {
     ignore_changes = [kms_key_id, encrypted]
   }

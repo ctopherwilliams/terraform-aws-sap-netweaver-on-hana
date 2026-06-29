@@ -10,53 +10,44 @@ This document has two parts:
 
 ---
 
-## Part 1 — Remaining work for this repo
+## Part 1 — Status & remaining work for this repo
 
-The first-pass overhaul intentionally avoided changes that alter resource
-behavior and require a real `terraform apply` to verify. Those are tracked here.
+### Done (AWS provider v5/v6 modernization)
 
-### 1. Upgrade the AWS provider to v5/v6  *(high value, breaking)*
+- ✅ **AWS provider upgraded to `>= 5.0`** (validated on v6). The active module
+  graph never used the v4-breaking S3 sub-module, so no resource rewrites were
+  needed.
+- ✅ **Removed the deprecated `hashicorp/template` provider** — the `template_file`
+  data source was dead code; deleted it and dropped the provider.
+- ✅ **gp3 defaults** for root, swap, `/usr/sap`, shared, and HANA data/log
+  volumes. Sizing logic is now gp3-aware (non-`io1` SSD → general-purpose
+  profile).
+- ✅ **IMDSv2 enforced** on all EC2 instances.
+- ✅ **Encryption-by-default** for all EBS and EFS volumes (AWS-managed key when
+  no CMK is supplied), with null-safe `kms_key_id`.
+- ✅ **Removed nine unused, non-SAP internal sub-modules** that did not build on
+  the modern provider.
+- ✅ **Wired through** previously-ignored root variables so they take effect.
+- ✅ CI now validates every sub-module and example; `.trivyignore` documents the
+  one accepted finding.
 
-Currently pinned to `>= 3.0, < 4.0`. The blocker is the S3 sub-module
-(`modules/_internal-modules/storage/s3`), which uses inline `aws_s3_bucket`
-arguments (ACL, versioning, SSE, lifecycle) that were **removed in AWS provider
-v4**. Upgrading requires:
+### Remaining enhancements
 
-- Splitting those into dedicated resources: `aws_s3_bucket_acl`,
-  `aws_s3_bucket_versioning`, `aws_s3_bucket_server_side_encryption_configuration`,
-  `aws_s3_bucket_lifecycle_configuration`, `aws_s3_bucket_public_access_block`.
-- Reviewing every other resource for v4/v5/v6 deprecations.
-- Running `terraform plan`/`apply` against a real account to confirm no
-  destructive diffs.
-
-### 2. Drop the deprecated `hashicorp/template` provider
-
-`modules/aws-sap-ascs-host/data.tf` uses `data "template_file"`. The provider is
-archived and unavailable on `darwin_arm64` (Apple Silicon). Replace with the
-built-in [`templatefile()`](https://developer.hashicorp.com/terraform/language/functions/templatefile)
-function and remove `template` from `required_providers`.
-
-### 3. Default EBS volume types `gp2` -> `gp3`
-
-`gp3` is cheaper and faster. Update the `hana_disks_*_storage_type` defaults and
-the hardcoded `gp2` swap volumes. Verify IOPS/throughput defaults are adequate
-for HANA.
-
-### 4. Enforce IMDSv2
-
-Add a `metadata_options { http_tokens = "required" }` block to the EC2 instance
-resource in `modules/_internal-modules/compute/ec2-instance-linux`.
-
-### 5. Make `tflint` and the Trivy scan blocking
-
-They run as informational in CI today. Once the findings above are cleared,
-remove `continue-on-error` so they gate merges.
-
-### 6. Reconcile `high_availability` vs `enable_ha`
-
-`main.tf` only consumes `enable_ha`; `high_availability` is declared but unused.
-Either wire it up or remove it in a tagged major release with a note in the
-changelog.
+1. **Make instance egress configurable.** Outbound is currently open
+   (`0.0.0.0/0`), which SAP hosts generally require for OS patching, SSM, and SAP
+   downloads (accepted in `.trivyignore`). Expose an `egress_cidr_blocks`
+   variable for operators running in fully private/proxied networks.
+2. **`terraform plan` integration tests.** `validate` covers syntax and refs but
+   not apply-time behavior. Add a plan-based test (e.g. Terratest or a CI job
+   with short-lived credentials) against a real account.
+3. **Tagged Registry releases.** Publish semver tags so consumers can pin a
+   version and adopt via the Terraform Registry.
+4. **Reconcile `high_availability` vs `enable_ha`.** `main.tf` consumes only
+   `enable_ha`; `high_availability` is retained (deprecated) for compatibility.
+   Remove it in the next major release.
+5. **gp3 IOPS/throughput tuning.** Defaults inherit the gp3 baseline
+   (3000 IOPS / 125 MB/s). Expose tunables for HANA data/log if higher
+   performance is required.
 
 ---
 

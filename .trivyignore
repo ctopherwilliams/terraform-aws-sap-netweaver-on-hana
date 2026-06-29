@@ -1,0 +1,10 @@
+# Trivy IaC findings that have been reviewed and consciously accepted.
+# Each entry must carry a justification. Re-review periodically.
+
+# AWS-0104: Security group rule allows unrestricted egress to 0.0.0.0/0.
+# Accepted: SAP NetWeaver/HANA hosts require broad outbound connectivity for OS
+# patching, SAP software downloads, SSM Session Manager, EFS, and AWS service
+# endpoints. Operators who run in a fully private/proxied network can tighten
+# egress in their own fork or via the instance security groups. Tracked as a
+# future enhancement (make egress CIDRs a variable) in REHAUL_PLAYBOOK.md.
+AWS-0104

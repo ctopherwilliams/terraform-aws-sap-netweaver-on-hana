@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/actions/workflows/ci.yml/badge.svg)](https://github.com/ctopherwilliams/terraform-aws-sap-netweaver-on-hana/actions/workflows/ci.yml)
 [![Terraform](https://img.shields.io/badge/terraform-%3E%3D%201.0-7B42BC?logo=terraform)](https://www.terraform.io)
+[![AWS Provider](https://img.shields.io/badge/aws--provider-%3E%3D%205.0-FF9900?logo=amazonaws)](https://registry.terraform.io/providers/hashicorp/aws/latest)
 [![License: MIT-0](https://img.shields.io/badge/license-MIT--0-blue.svg)](./LICENSE)
 
 A Terraform module that provisions the AWS infrastructure required to install and
@@ -9,11 +10,21 @@ run **SAP NetWeaver on HANA**. It builds the full landscape — the HANA databas
 tier, the ASCS (central services) tier, the application-server tier, and the
 shared `/sapmnt` storage that ties them together.
 
-> **Note**
-> This module is a modernized continuation of an AWS-authored sample. See the
-> [Roadmap](#roadmap) and [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md) for the
-> current state of the upgrade work (provider versions, deprecated functions,
-> security hardening).
+Runs on **Terraform 1.x** and the **AWS provider v5/v6** (validated against the
+latest release), with secure-by-default storage and instance metadata.
+
+## Highlights
+
+- **Modern toolchain** — Terraform `>= 1.0`, AWS provider `>= 5.0`; validated on
+  the latest provider in CI, no deprecated providers or functions.
+- **Secure by default** — all EBS and EFS volumes are encrypted, EC2 enforces
+  **IMDSv2**, and a customer-managed KMS key is a one-line opt-in.
+- **Cost-aware defaults** — EBS volumes default to **gp3** (cheaper and faster
+  than gp2).
+- **Composable** — HANA, ASCS, application-server, and `/sapmnt` EFS tiers are
+  independent sub-modules you can reuse on their own.
+- **CI-verified** — every module and example is `fmt`/`validate`/`tflint`-checked
+  and scanned with Trivy on each push.
 
 ## What it creates
 
@@ -106,21 +117,22 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-CI runs `terraform fmt`, `validate`, `tflint`, a Trivy IaC scan, and a
-`terraform-docs` drift check on every push and pull request
-(see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
+CI runs `terraform fmt`, `validate` (root, **every sub-module, and every
+example**), `tflint`, a Trivy IaC scan, and a `terraform-docs` drift check on
+every push and pull request (see
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
 
 ## Roadmap
 
-This module is being brought back to a maintainable, modern baseline. Remaining
-work is tracked in [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md), notably:
+The major modernization is complete: AWS provider v5/v6 support, removal of the
+deprecated `template` provider, gp3 defaults, encryption-by-default, and IMDSv2
+enforcement all shipped. Remaining enhancements are tracked in
+[`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md), notably:
 
-- Upgrade the AWS provider from `< 4.0` to v5/v6 (requires splitting the inline
-  `aws_s3_bucket` arguments and refreshing other deprecated resource syntax).
-- Replace the deprecated `hashicorp/template` provider with the built-in
-  `templatefile()` function.
-- Default EBS volume types from `gp2` to the cheaper/faster `gp3`.
-- Enforce IMDSv2 on all instances.
+- Make instance **egress CIDRs configurable** (today outbound is open, which SAP
+  hosts generally require for patching/SSM; see `.trivyignore`).
+- Add `terraform plan` based integration tests against a real AWS account.
+- Publish tagged releases to the Terraform Registry.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -128,10 +140,9 @@ work is tracked in [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md), notably:
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.0, < 4.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | >= 2.0 |
-| <a name="requirement_template"></a> [template](#requirement\_template) | >= 2.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.0 |
 
 ## Providers
 
@@ -173,18 +184,18 @@ No resources.
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | (Optional) Enable the provisioning of resources of the module or not | `bool` | `true` | no |
 | <a name="input_environment_type"></a> [environment\_type](#input\_environment\_type) | (Required) Environment type of SAP Netweaver system, e.x. 'dev', 'test', 'prod' | `string` | n/a | yes |
 | <a name="input_hana_disks_backup_storage_type"></a> [hana\_disks\_backup\_storage\_type](#input\_hana\_disks\_backup\_storage\_type) | (Optional) EBS Volume type for hana backup volumes. | `string` | `"st1"` | no |
-| <a name="input_hana_disks_data_storage_type"></a> [hana\_disks\_data\_storage\_type](#input\_hana\_disks\_data\_storage\_type) | (Optional) EBS Volume type for hana data volumes. Can be gp2 or io1 | `string` | `"gp2"` | no |
-| <a name="input_hana_disks_logs_storage_type"></a> [hana\_disks\_logs\_storage\_type](#input\_hana\_disks\_logs\_storage\_type) | (Optional) EBS Volume type for hana log volumes. Can be gp2 or io1 | `string` | `"gp2"` | no |
+| <a name="input_hana_disks_data_storage_type"></a> [hana\_disks\_data\_storage\_type](#input\_hana\_disks\_data\_storage\_type) | (Optional) EBS Volume type for hana data volumes. Can be gp3, gp2 or io1 | `string` | `"gp3"` | no |
+| <a name="input_hana_disks_logs_storage_type"></a> [hana\_disks\_logs\_storage\_type](#input\_hana\_disks\_logs\_storage\_type) | (Optional) EBS Volume type for hana log volumes. Can be gp3, gp2 or io1 | `string` | `"gp3"` | no |
 | <a name="input_hana_disks_shared_size"></a> [hana\_disks\_shared\_size](#input\_hana\_disks\_shared\_size) | (Optional) Size in GBs for the hana shared volumes of the instances | `string` | `"512"` | no |
-| <a name="input_hana_disks_shared_storage_type"></a> [hana\_disks\_shared\_storage\_type](#input\_hana\_disks\_shared\_storage\_type) | (Optional) EBS Volume type for hana shared volumes. | `string` | `"gp2"` | no |
+| <a name="input_hana_disks_shared_storage_type"></a> [hana\_disks\_shared\_storage\_type](#input\_hana\_disks\_shared\_storage\_type) | (Optional) EBS Volume type for hana shared volumes. | `string` | `"gp3"` | no |
 | <a name="input_hana_disks_usr_sap_storage_size"></a> [hana\_disks\_usr\_sap\_storage\_size](#input\_hana\_disks\_usr\_sap\_storage\_size) | (Optional) Size in GBs for the /usr/sap volumes of the instances | `number` | `50` | no |
-| <a name="input_hana_disks_usr_sap_storage_type"></a> [hana\_disks\_usr\_sap\_storage\_type](#input\_hana\_disks\_usr\_sap\_storage\_type) | (Optional) EBS Volume type for hana /usr/sap volumes. | `string` | `"gp2"` | no |
+| <a name="input_hana_disks_usr_sap_storage_type"></a> [hana\_disks\_usr\_sap\_storage\_type](#input\_hana\_disks\_usr\_sap\_storage\_type) | (Optional) EBS Volume type for hana /usr/sap volumes. | `string` | `"gp3"` | no |
 | <a name="input_hana_instance_type"></a> [hana\_instance\_type](#input\_hana\_instance\_type) | (Required) Identifies the instance types to be used for HANA. Should be from the list of certified instances, since the disk sizing is done based on this | `string` | n/a | yes |
 | <a name="input_hana_is_scale_out"></a> [hana\_is\_scale\_out](#input\_hana\_is\_scale\_out) | (Optional) Defines whether Shared disk should be create as an EFS file system | `bool` | `false` | no |
 | <a name="input_hana_scale_out_node_count"></a> [hana\_scale\_out\_node\_count](#input\_hana\_scale\_out\_node\_count) | (Required, if hana\_is\_scale\_out = false) Defines how many nodes required for scale-out scenario | `number` | `3` | no |
 | <a name="input_high_availability"></a> [high\_availability](#input\_high\_availability) | (Deprecated) Retained for backwards compatibility. High availability is controlled by `enable_ha`, which is the variable actually consumed by the module | `bool` | `false` | no |
 | <a name="input_iam_instance_role"></a> [iam\_instance\_role](#input\_iam\_instance\_role) | (Optional) The IAM role name to be attached to instance profile | `string` | `""` | no |
-| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | (Optional) ARN of the KMS key used to encrypt EBS and EFS volumes. If left empty, volumes are created unencrypted. Supplying a key is strongly recommended | `string` | `""` | no |
+| <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | (Optional) ARN of a customer-managed KMS key used to encrypt EBS and EFS volumes. Volumes are always encrypted; if left empty the AWS-managed key is used. Supplying a customer-managed key is recommended | `string` | `""` | no |
 | <a name="input_root_volume_size"></a> [root\_volume\_size](#input\_root\_volume\_size) | (Optional) Size in GBs for the root volumes of the instances | `number` | `50` | no |
 | <a name="input_sapmnt_volume_size"></a> [sapmnt\_volume\_size](#input\_sapmnt\_volume\_size) | (Optional) Size in GBs for the /sapmnt volume. Use it only for non-EFS scenario. Not provisioned if value = 0 | `number` | `0` | no |
 | <a name="input_sid"></a> [sid](#input\_sid) | (Required) The System id for the SAP Netweaver system | `string` | n/a | yes |
