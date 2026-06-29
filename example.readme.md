@@ -1,21 +1,25 @@
 # Example: SAP NetWeaver on HANA Deployment
 
-This example showcases how the underlying modules can be used to deploy the required AWS resources in preparation to install SAP NetWeaver on HANA.
+This repository ships a complete, runnable example under
+[`examples/basic`](./examples/basic). Prefer that over the legacy snippet below.
 
-### What's required?
+## Requirements
 
-Please review the individual SAP on AWS Terraform modules in this repository to familiarize yourself with the variables and its usage for that module.
+- Terraform `>= 1.0`
+- AWS provider `>= 3.0, < 4.0`
 
-### Terraform versions
+## How to deploy
 
-Terraform 0.12. Pin module version to `~> v2.0`. 
+1. Copy `examples/basic/terraform.tfvars.example` to
+   `examples/basic/terraform.tfvars` and update the values for your environment.
+2. From `examples/basic`:
 
-### How to deploy?
-1. Make a copy the file `terraform.tfvars.sample` located in this folder.
-2. Update the variables to match that of your environment.
+```bash
+terraform init    # initialize the working directory
+terraform plan    # review the execution plan
+terraform apply   # create the infrastructure
+terraform destroy # tear it down when finished
+```
 
-### How to set up and execute this sample?
-* `terraform init` to initialize the working directory.
-* `terraform plan` to create the execution plan which can be reviewed from the console
-`terraform apply -var-file=<<input_file_name>>` to apply the changes
-* `terraform destroy -var-file=<<input_file_name>>` to destroy the Terraform managed infrastructure
+You can also call the root module directly from your own configuration — see the
+[Usage](./README.md#usage) section of the main README.

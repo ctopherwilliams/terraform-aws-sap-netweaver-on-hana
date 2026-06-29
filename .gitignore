@@ -1,0 +1,39 @@
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform lockfile (a root example may commit this; the module itself does not)
+.terraform.lock.hcl
+
+# State files - never commit these
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Variable files that may contain secrets
+*.tfvars
+*.tfvars.json
+!*.tfvars.sample
+
+# Plan output files
+*.tfplan
+*.plan
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Editor / OS noise
+.idea/
+.vscode/
+*.swp
+.DS_Store

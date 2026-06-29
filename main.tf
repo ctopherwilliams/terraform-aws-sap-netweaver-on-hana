@@ -16,7 +16,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-module sap_efs {
+module "sap_efs" {
   source  = "./modules/aws-sap-netweaver-efs"
   enabled = var.enabled
 
@@ -35,7 +35,7 @@ module sap_efs {
 }
 
 
-module hana_host {
+module "hana_host" {
   source = "./modules/aws-sap-hana-host"
 
   # Instance Count depending on the environment
@@ -76,7 +76,7 @@ module hana_host {
   sid = var.sid
 }
 
-module sap_ascs_host {
+module "sap_ascs_host" {
   source  = "./modules/aws-sap-ascs-host"
   enabled = var.enabled
 
@@ -110,7 +110,7 @@ module sap_ascs_host {
 }
 
 
-module sap_app_host {
+module "sap_app_host" {
   source  = "./modules/aws-sap-app-host"
   enabled = var.enabled
 
