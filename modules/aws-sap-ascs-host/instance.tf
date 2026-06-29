@@ -40,6 +40,7 @@ module "instance" {
   ebs_optimized    = var.ebs_optimized
   instance_type    = var.instance_type
   root_volume_size = var.root_volume_size
+  ssh_key          = var.ssh_key
 
   subnet_ids             = var.subnet_ids
   vpc_security_group_ids = flatten([aws_security_group.instance.*.id[0], aws_security_group.sap_application.*.id[0], var.customer_default_sg_ids])

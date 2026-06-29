@@ -39,5 +39,5 @@ resource "aws_security_group_rule" "instance_all_outbound" {
   from_port         = "0"
   to_port           = "65535"
   protocol          = "all"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = var.egress_cidr_blocks
 }

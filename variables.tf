@@ -85,7 +85,7 @@ variable "user_data" {
 
 # Security
 variable "kms_key_arn" {
-  description = "(Optional) ARN of the KMS key used to encrypt EBS and EFS volumes. If left empty, volumes are created unencrypted. Supplying a key is strongly recommended"
+  description = "(Optional) ARN of a customer-managed KMS key used to encrypt EBS and EFS volumes. Volumes are always encrypted; if left empty the AWS-managed key is used. Supplying a customer-managed key is recommended"
   default     = ""
   type        = string
 }
@@ -138,13 +138,13 @@ variable "root_volume_size" {
   type        = number
 }
 variable "hana_disks_data_storage_type" {
-  default     = "gp2"
-  description = "(Optional) EBS Volume type for hana data volumes. Can be gp2 or io1"
+  default     = "gp3"
+  description = "(Optional) EBS Volume type for hana data volumes. Can be gp3, gp2 or io1"
   type        = string
 }
 variable "hana_disks_logs_storage_type" {
-  default     = "gp2"
-  description = "(Optional) EBS Volume type for hana log volumes. Can be gp2 or io1"
+  default     = "gp3"
+  description = "(Optional) EBS Volume type for hana log volumes. Can be gp3, gp2 or io1"
   type        = string
 }
 variable "hana_disks_backup_storage_type" {
@@ -153,7 +153,7 @@ variable "hana_disks_backup_storage_type" {
   type        = string
 }
 variable "hana_disks_shared_storage_type" {
-  default     = "gp2"
+  default     = "gp3"
   description = "(Optional) EBS Volume type for hana shared volumes."
   type        = string
 }
@@ -163,7 +163,7 @@ variable "hana_disks_shared_size" {
   type        = string
 }
 variable "hana_disks_usr_sap_storage_type" {
-  default     = "gp2"
+  default     = "gp3"
   description = "(Optional) EBS Volume type for hana /usr/sap volumes. "
   type        = string
 }
@@ -213,4 +213,9 @@ variable "app_server_root_volume_size" {
   default     = 50
   description = "(Optional) Size in GBs for the root volumes of the instances"
   type        = number
+}
+variable "instance_egress_cidr_blocks" {
+  description = "(Optional) CIDR blocks the SAP instances may send outbound traffic to. Defaults to all destinations, which SAP hosts typically require for OS patching, SSM Session Manager, and SAP software downloads. Restrict this for private/proxied networks."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }

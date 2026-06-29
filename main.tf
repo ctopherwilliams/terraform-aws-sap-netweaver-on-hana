@@ -17,8 +17,10 @@
  */
 
 module "sap_efs" {
-  source  = "./modules/aws-sap-netweaver-efs"
-  enabled = var.enabled
+  source = "./modules/aws-sap-netweaver-efs"
+  # The EFS security group is always created so the ASCS/app tiers can
+  # reference it; only the /sapmnt file system itself is gated by efs_sapmnt.
+  enabled = var.enabled && var.efs_sapmnt
 
   kms_key_arn = var.kms_key_arn
 
@@ -64,6 +66,23 @@ module "hana_host" {
   # The default security group to be added
   customer_default_sg_id = var.customer_default_sg_id
 
+  # Operating system
+  ssh_key   = var.ssh_key
+  user_data = var.user_data
+
+  # Networking (egress)
+  egress_cidr_blocks = var.instance_egress_cidr_blocks
+
+  # Storage
+  root_volume_size                = var.root_volume_size
+  hana_disks_data_storage_type    = var.hana_disks_data_storage_type
+  hana_disks_logs_storage_type    = var.hana_disks_logs_storage_type
+  hana_disks_backup_storage_type  = var.hana_disks_backup_storage_type
+  hana_disks_shared_storage_type  = var.hana_disks_shared_storage_type
+  hana_disks_shared_size          = var.hana_disks_shared_size
+  hana_disks_usr_sap_storage_type = var.hana_disks_usr_sap_storage_type
+  hana_disks_usr_sap_storage_size = var.hana_disks_usr_sap_storage_size
+
   # Instance Role
   iam_instance_role = var.default_instance_role ? "" : var.iam_instance_role
 
@@ -82,10 +101,22 @@ module "sap_ascs_host" {
 
   # Instance Count depending on the environment
   instance_count = var.enable_ha ? 2 : 1
+  instance_type  = var.ascs_instance_type
 
   # General
   ami_id      = var.ami_id
   kms_key_arn = var.kms_key_arn
+
+  # Operating system
+  ssh_key   = var.ssh_key
+  user_data = var.user_data
+
+  # Networking (egress)
+  egress_cidr_blocks = var.instance_egress_cidr_blocks
+
+  # Storage
+  root_volume_size   = var.ascs_root_volume_size
+  sapmnt_volume_size = var.sapmnt_volume_size
 
   # Networking
   vpc_id = var.vpc_id
@@ -116,10 +147,21 @@ module "sap_app_host" {
 
   # Instance Count depending on the environment
   instance_count = var.as_instance_count
+  instance_type  = var.as_instance_type
 
   # General
   ami_id      = var.ami_id
   kms_key_arn = var.kms_key_arn
+
+  # Operating system
+  ssh_key   = var.ssh_key
+  user_data = var.user_data
+
+  # Networking (egress)
+  egress_cidr_blocks = var.instance_egress_cidr_blocks
+
+  # Storage
+  root_volume_size = var.app_server_root_volume_size
 
   # Networking
   vpc_id = var.vpc_id

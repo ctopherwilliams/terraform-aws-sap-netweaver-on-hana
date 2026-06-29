@@ -29,8 +29,15 @@ This is Terraform infrastructure-as-code. The most relevant concerns are:
 
 If you find any of the above, we treat it as a security issue.
 
-## Provider versions
+## Secure defaults
 
-This module currently pins the AWS provider to `>= 3.0, < 4.0`. See
-[`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md) for the planned upgrade path to
-modern provider versions.
+- All EBS and EFS volumes are **encrypted** (AWS-managed key by default; supply
+  `kms_key_arn` for a customer-managed key).
+- EC2 instances enforce **IMDSv2** (`http_tokens = "required"`).
+- The module targets the **AWS provider `>= 5.0`** (validated on v6) and Terraform
+  `>= 1.0`, with no deprecated providers.
+
+One finding is consciously accepted and documented in
+[`.trivyignore`](./.trivyignore): SAP hosts use open egress for OS patching, SSM,
+and SAP downloads. See [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md) for making
+egress configurable.

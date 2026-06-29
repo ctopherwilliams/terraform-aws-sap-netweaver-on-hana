@@ -33,12 +33,12 @@ enable_ha = false # set true to provision a second HANA and ASCS instance
 hana_is_scale_out               = false
 hana_instance_type              = "r5.2xlarge"
 root_volume_size                = 50
-hana_disks_data_storage_type    = "gp2" # gp2 or io1
-hana_disks_logs_storage_type    = "gp2" # gp2 or io1
+hana_disks_data_storage_type    = "gp3" # gp3, gp2 or io1
+hana_disks_logs_storage_type    = "gp3" # gp3, gp2 or io1
 hana_disks_backup_storage_type  = "st1"
-hana_disks_shared_storage_type  = "gp2"
+hana_disks_shared_storage_type  = "gp3"
 hana_disks_shared_size          = "512"
-hana_disks_usr_sap_storage_type = "gp2"
+hana_disks_usr_sap_storage_type = "gp3"
 hana_disks_usr_sap_storage_size = 50
 
 # NetWeaver application server parameters
