@@ -11,7 +11,7 @@ terraform {
     # `aws_s3_bucket_*` resources first. See REHAUL_PLAYBOOK.md.
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 3.0, < 4.0"
+      version = ">= 3.0, < 6.53"
     }
     null = {
       source  = "hashicorp/null"
