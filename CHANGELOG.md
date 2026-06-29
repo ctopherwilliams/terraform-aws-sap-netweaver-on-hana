@@ -6,6 +6,18 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Configurable instance egress** via `instance_egress_cidr_blocks` (root) and
+  `egress_cidr_blocks` (host sub-modules); defaults to the existing open behavior.
+- **Terratest integration-test harness** under `test/` and an on-demand
+  `integration` CI workflow that applies `examples/basic` against a real AWS
+  account, asserts outputs, and destroys (runs when AWS credentials/secrets are
+  configured; self-skips otherwise).
+- World-class README (value proposition, table of contents, prerequisites, quick
+  start, configuration recipes, acknowledgements).
+
+## [2.0.0] - 2026-06-29
+
 ### AWS provider v5/v6 modernization
 
 #### Changed (potentially breaking)

@@ -37,9 +37,11 @@ This document has two parts:
    (`0.0.0.0/0`), which SAP hosts generally require for OS patching, SSM, and SAP
    downloads (accepted in `.trivyignore`). Expose an `egress_cidr_blocks`
    variable for operators running in fully private/proxied networks.
-2. **`terraform plan` integration tests.** `validate` covers syntax and refs but
-   not apply-time behavior. Add a plan-based test (e.g. Terratest or a CI job
-   with short-lived credentials) against a real account.
+2. **Run the integration tests.** A Terratest harness (`test/`) and an on-demand
+   `integration` workflow now apply `examples/basic`, assert outputs, and
+   destroy. They self-skip until a test AWS account is wired up via the
+   documented secrets (`AWS_ROLE_ARN`, `SAP_TEST_*`). Configure those secrets and
+   run the workflow to get apply-time verification.
 3. **Tagged Registry releases.** Publish semver tags so consumers can pin a
    version and adopt via the Terraform Registry.
 4. **Reconcile `high_availability` vs `enable_ha`.** `main.tf` consumes only

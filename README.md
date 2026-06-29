@@ -28,6 +28,7 @@ cost-aware, composable, and verified on the latest AWS provider in CI.
 - [Sub-modules](#sub-modules)
 - [Development](#development)
 - [Roadmap](#roadmap)
+- [Testing](#testing)
 - [Requirements / Inputs / Outputs](#requirements)
 - [Contributing](#contributing) · [Security](#security) · [License](#license)
 
@@ -216,12 +217,21 @@ every push and pull request (see
 
 The major modernization is complete — AWS provider v5/v6 support, removal of the
 deprecated `template` provider, gp3 defaults, encryption-by-default, IMDSv2
-enforcement, and configurable egress have all shipped. Remaining enhancements are
-tracked in [`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md):
+enforcement, configurable egress, and a [Terratest integration harness](./test)
+have all shipped. Remaining enhancements are tracked in
+[`REHAUL_PLAYBOOK.md`](./REHAUL_PLAYBOOK.md):
 
-- `terraform plan` based integration tests against a real AWS account.
-- Publish tagged releases to the Terraform Registry.
+- Wire a test AWS account into the `integration` workflow for continuous
+  apply-time verification (the harness self-skips until secrets are set).
 - Expose gp3 IOPS / throughput tunables for HANA data and log volumes.
+
+## Testing
+
+- **Static** (every push, no credentials needed): `fmt`, `validate` of every
+  module and example, `tflint`, Trivy, and `terraform-docs` drift.
+- **Integration** (on demand): the [`test/`](./test) Terratest suite applies
+  `examples/basic` against a real AWS account, asserts outputs, and destroys.
+  See [`test/README.md`](./test/README.md).
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
