@@ -2,9 +2,9 @@
 # Each entry must carry a justification. Re-review periodically.
 
 # AWS-0104: Security group rule allows unrestricted egress to 0.0.0.0/0.
-# Accepted: SAP NetWeaver/HANA hosts require broad outbound connectivity for OS
-# patching, SAP software downloads, SSM Session Manager, EFS, and AWS service
-# endpoints. Operators who run in a fully private/proxied network can tighten
-# egress in their own fork or via the instance security groups. Tracked as a
-# future enhancement (make egress CIDRs a variable) in REHAUL_PLAYBOOK.md.
+# Accepted as the DEFAULT only. SAP NetWeaver/HANA hosts require broad outbound
+# connectivity for OS patching, SAP software downloads, SSM Session Manager,
+# EFS, and AWS service endpoints. This is now configurable: set
+# `instance_egress_cidr_blocks` (root) or `egress_cidr_blocks` (sub-modules) to
+# restrict egress for private/proxied networks.
 AWS-0104

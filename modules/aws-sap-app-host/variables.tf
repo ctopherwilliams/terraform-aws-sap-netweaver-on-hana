@@ -112,3 +112,9 @@ variable "application_name" {
   description = "(Required) The name of the application being provisioned, ex. 'datamart', 'ecc', 's4hana', etc."
   type        = string
 }
+
+variable "egress_cidr_blocks" {
+  description = "(Optional) CIDR blocks the instances may send outbound traffic to. Defaults to all destinations, which SAP hosts typically require for OS patching, SSM, and SAP downloads. Restrict for private/proxied networks."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}

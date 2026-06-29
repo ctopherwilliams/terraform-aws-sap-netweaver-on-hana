@@ -70,6 +70,9 @@ module "hana_host" {
   ssh_key   = var.ssh_key
   user_data = var.user_data
 
+  # Networking (egress)
+  egress_cidr_blocks = var.instance_egress_cidr_blocks
+
   # Storage
   root_volume_size                = var.root_volume_size
   hana_disks_data_storage_type    = var.hana_disks_data_storage_type
@@ -107,6 +110,9 @@ module "sap_ascs_host" {
   # Operating system
   ssh_key   = var.ssh_key
   user_data = var.user_data
+
+  # Networking (egress)
+  egress_cidr_blocks = var.instance_egress_cidr_blocks
 
   # Storage
   root_volume_size   = var.ascs_root_volume_size
@@ -150,6 +156,9 @@ module "sap_app_host" {
   # Operating system
   ssh_key   = var.ssh_key
   user_data = var.user_data
+
+  # Networking (egress)
+  egress_cidr_blocks = var.instance_egress_cidr_blocks
 
   # Storage
   root_volume_size = var.app_server_root_volume_size

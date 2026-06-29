@@ -214,3 +214,8 @@ variable "app_server_root_volume_size" {
   description = "(Optional) Size in GBs for the root volumes of the instances"
   type        = number
 }
+variable "instance_egress_cidr_blocks" {
+  description = "(Optional) CIDR blocks the SAP instances may send outbound traffic to. Defaults to all destinations, which SAP hosts typically require for OS patching, SSM Session Manager, and SAP software downloads. Restrict this for private/proxied networks."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
