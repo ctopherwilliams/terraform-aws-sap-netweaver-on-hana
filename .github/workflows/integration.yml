@@ -40,7 +40,7 @@ jobs:
       # enable; the step is skipped (and the tests self-skip) when it is absent.
       - name: Configure AWS credentials (OIDC)
         if: ${{ env.AWS_ROLE_ARN != '' }}
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ inputs.aws_region }}
